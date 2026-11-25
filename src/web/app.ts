@@ -1,3 +1,4 @@
+import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { csrf } from 'hono/csrf';
 import { HTTPException } from 'hono/http-exception';
@@ -19,6 +20,9 @@ import type { AppEnv, AppOptions } from './types.js';
  *   so static generation can run without secrets or a running MongoDB.
  * - `serve` mode mounts everything, injects runtime dependencies and
  *   protects every route except `/health`, `/login` and `/assets/*`.
+ *
+ * Static files are mounted on explicit paths only, so the static middleware
+ * can never shadow an authenticated or dynamic route.
  */
 export function createApp(options: AppOptions): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
@@ -43,8 +47,18 @@ export function createApp(options: AppOptions): Hono<AppEnv> {
   // Public routes are mounted before requireAuth so they never hit it.
   app.route('/health', health);
   app.route('/', auth.routes);
+  if (options.staticDir) {
+    app.use('/assets/*', serveStatic({ root: options.staticDir }));
+  }
+  // Unknown assets are a plain 404, never a login redirect.
+  app.all('/assets/*', (c) => c.text('Not found', 404));
 
   app.use('*', auth.requireAuth);
+  if (options.staticDir) {
+    // Pre-rendered shell pages; fall through to the TSX routes when absent.
+    app.get('/', serveStatic({ root: options.staticDir, path: 'index.html' }));
+    app.get('/about', serveStatic({ root: options.staticDir, path: 'about.html' }));
+  }
   app.route('/fragments', fragments);
   app.route('/', ssrPages);
   app.route('/', staticPages);

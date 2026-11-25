@@ -9,7 +9,17 @@ export type WebDependencies = Readonly<{
 
 export type AppOptions =
   | Readonly<{ mode: 'ssg' }>
-  | Readonly<{ mode: 'serve'; deps: WebDependencies; auth: AuthConfig }>;
+  | Readonly<{
+      mode: 'serve';
+      deps: WebDependencies;
+      auth: AuthConfig;
+      /**
+       * Directory produced by `npm run build` (dist/static). When set, assets are
+       * served from `<staticDir>/assets` and the pre-rendered shell pages are
+       * served from disk; missing files fall back to runtime rendering.
+       */
+      staticDir?: string;
+    }>;
 
 export type AppEnv = {
   Variables: {
