@@ -1,3 +1,4 @@
+import type { AuthConfig } from './auth.js';
 import type { StatusSource } from './status.js';
 
 /** Runtime dependencies for the served application. SSG builds have none. */
@@ -8,7 +9,7 @@ export type WebDependencies = Readonly<{
 
 export type AppOptions =
   | Readonly<{ mode: 'ssg' }>
-  | Readonly<{ mode: 'serve'; deps: WebDependencies; isProduction: boolean }>;
+  | Readonly<{ mode: 'serve'; deps: WebDependencies; auth: AuthConfig }>;
 
 export type AppEnv = {
   Variables: {

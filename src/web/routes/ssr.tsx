@@ -7,8 +7,6 @@ import type { AppEnv } from '../types.js';
 /** Server-rendered pages. Excluded from static generation. */
 export const ssrPages = new Hono<AppEnv>();
 
-ssrPages.use('*', disableSSG());
-
 const placeholders = [
   { path: '/jobs', title: 'Jobs', milestone: 'M1 — Job discovery' },
   { path: '/companies', title: 'Companies', milestone: 'M1 — Job discovery' },
@@ -18,7 +16,7 @@ const placeholders = [
 ] as const;
 
 for (const page of placeholders) {
-  ssrPages.get(page.path, (c) =>
+  ssrPages.get(page.path, disableSSG(), (c) =>
     c.render(<Placeholder title={page.title} milestone={page.milestone} />, {
       title: page.title,
       currentPath: page.path,
@@ -26,7 +24,7 @@ for (const page of placeholders) {
   );
 }
 
-ssrPages.get('/jobs/:id', (c) => {
+ssrPages.get('/jobs/:id', disableSSG(), (c) => {
   c.status(404);
   return c.render(<Placeholder title={`Job ${c.req.param('id')}`} milestone="M1 — Job discovery" />, {
     title: 'Job',
