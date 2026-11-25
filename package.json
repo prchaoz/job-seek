@@ -1,0 +1,48 @@
+{
+  "name": "job-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal job-search agent: discovery, matching, tailored resumes and assisted applications.",
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "dev:web": "tsx watch src/entrypoints/web.ts",
+    "dev:worker": "tsx watch src/entrypoints/worker.ts",
+    "build": "npm run build:ts && npm run build:css && npm run build:htmx && npm run build:static",
+    "build:ts": "tsc -p tsconfig.build.json",
+    "build:css": "tailwindcss -i src/web/static/app.css -o dist/static/assets/app.css --minify",
+    "build:htmx": "node scripts/copy-htmx.mjs",
+    "build:static": "node dist/entrypoints/build-static.js",
+    "start:web": "node dist/entrypoints/web.js",
+    "start:worker": "node dist/entrypoints/worker.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration"
+  },
+  "dependencies": {
+    "@agendajs/mongo-backend": "^4.0.5",
+    "@hono/node-server": "^2.1.11",
+    "agenda": "^6.2.8",
+    "hono": "^4.13.22",
+    "htmx.org": "^2.0.11",
+    "mongodb": "^7.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/cli": "^4.3.5",
+    "@testcontainers/mongodb": "^12.2.2",
+    "@types/node": "^26.6.7",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.74.0",
+    "vitest": "^5.1.1"
+  }
+}
