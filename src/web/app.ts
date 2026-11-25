@@ -1,0 +1,46 @@
+import { Hono } from 'hono';
+import { secureHeaders } from 'hono/secure-headers';
+
+import { layoutRenderer } from './layouts/Layout.js';
+
+import { fragments } from './routes/fragments.js';
+import { health } from './routes/health.js';
+import { staticPages } from './routes/pages.js';
+import { ssrPages } from './routes/ssr.js';
+import type { AppEnv, AppOptions } from './types.js';
+
+/**
+ * Builds the Hono application.
+ *
+ * - `ssg` mode mounts only the build-time pages and has no database access,
+ *   so static generation can run without secrets or a running MongoDB.
+ * - `serve` mode mounts everything and injects runtime dependencies.
+ */
+export function createApp(options: AppOptions): Hono<AppEnv> {
+  const app = new Hono<AppEnv>();
+  app.use('*', secureHeaders());
+  app.use('*', layoutRenderer);
+
+  if (options.mode === 'ssg') {
+    app.route('/', staticPages);
+    return app;
+  }
+
+  app.use('*', async (c, next) => {
+    c.set('deps', options.deps);
+    await next();
+  });
+
+  app.route('/health', health);
+  app.route('/fragments', fragments);
+  app.route('/', ssrPages);
+  app.route('/', staticPages);
+
+  app.notFound((c) => c.text('Not found', 404));
+  app.onError((error, c) => {
+    console.error(error);
+    return c.text('Internal server error', 500);
+  });
+
+  return app;
+}
