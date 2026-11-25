@@ -4,10 +4,25 @@ import { MongoDBContainer, type StartedMongoDBContainer } from '@testcontainers/
 
 import { connectDatabase, type DatabaseConnection } from '../../../src/database/client.js';
 
-/** True when a container runtime is reachable; integration suites skip otherwise. */
+/**
+ * True when a container runtime is reachable; integration suites skip otherwise.
+ * Testcontainers ignores the Docker CLI context (Colima, Rancher Desktop, ...),
+ * so the active context's endpoint is exported as DOCKER_HOST when unset.
+ */
 export function isDockerAvailable(): boolean {
   try {
     execSync('docker info', { stdio: 'ignore', timeout: 10_000 });
+    if (!process.env.DOCKER_HOST) {
+      const host = execSync("docker context inspect --format '{{.Endpoints.docker.Host}}'", {
+        encoding: 'utf8',
+        timeout: 10_000,
+      }).trim();
+      if (host) {
+        process.env.DOCKER_HOST = host;
+        // Ryuk mounts the daemon socket from inside the VM, not the host-side path.
+        process.env.TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE ??= '/var/run/docker.sock';
+      }
+    }
     return true;
   } catch {
     return false;
